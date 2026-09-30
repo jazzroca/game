@@ -3,15 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>AI 바둑 (Baduk Master)</title>
+    <title>클래식 솔리테어 (Klondike Solitaire)</title>
     <style>
         :root {
-            --bg-color: #1a1917;
-            --panel-bg: #272523;
-            --accent-gold: #e5b35c;
-            --text-light: #ececec;
-            --text-dim: #9e978e;
-            --board-wood: #dcab6b;
+            --felt-green: #1b5e20;
+            --felt-dark: #0d3813;
+            --card-width: 90px;
+            --card-height: 130px;
+            --card-radius: 9px;
+            --card-bg: #ffffff;
+            --slot-border: rgba(255, 255, 255, 0.22);
+            --gold: #ffca28;
+            --red-suit: #d32f2f;
+            --black-suit: #1a1a1a;
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --card-width: 12.8vw;
+                --card-height: 18.5vw;
+                --card-radius: 6px;
+            }
         }
 
         * {
@@ -23,175 +35,53 @@
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-light);
-            font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+            background: radial-gradient(circle at 50% 30%, var(--felt-green), var(--felt-dark));
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             overflow-x: hidden;
-            padding: 12px;
+            color: #fff;
         }
 
-        .game-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            max-width: 900px;
-            width: 100%;
-            gap: 14px;
-        }
-
-        /* Top Header & Info */
+        /* 헤더 컨트롤 바 */
         header {
             width: 100%;
+            max-width: 940px;
+            padding: 10px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: var(--panel-bg);
-            padding: 12px 20px;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
         }
 
-        .title-group h1 {
-            font-size: 1.4rem;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            color: var(--accent-gold);
+        .logo-group {
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        .title-group span {
-            font-size: 0.8rem;
-            color: var(--text-dim);
-            font-weight: 400;
+        .logo-group h1 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--gold);
+            letter-spacing: -0.5px;
         }
 
-        .record-badge {
-            font-size: 0.85rem;
-            color: var(--text-dim);
-            background: rgba(0,0,0,0.3);
-            padding: 6px 12px;
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.04);
-        }
-
-        .record-badge b {
-            color: #fff;
-        }
-
-        /* Dashboard & Turn Bar */
-        .dashboard {
-            width: 100%;
-            display: grid;
-            grid-template-columns: 1fr auto 1fr;
-            align-items: center;
-            background: var(--panel-bg);
-            padding: 10px 16px;
-            border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.06);
-            gap: 12px;
-        }
-
-        .player-card {
+        .status-bar {
             display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 8px 14px;
-            border-radius: 10px;
-            transition: background 0.3s, border 0.3s;
-            border: 2px solid transparent;
+            gap: 16px;
+            font-size: 0.92rem;
+            font-weight: 600;
         }
 
-        .player-card.active {
-            background: rgba(229, 179, 92, 0.12);
-            border-color: var(--accent-gold);
-        }
-
-        .player-card.right {
-            flex-direction: row-reverse;
-            text-align: right;
-        }
-
-        .stone-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-            flex-shrink: 0;
-        }
-
-        .stone-black-icon {
-            background: radial-gradient(circle at 35% 35%, #555, #111 80%);
-            border: 1px solid #444;
-        }
-
-        .stone-white-icon {
-            background: radial-gradient(circle at 35% 35%, #ffffff, #dcdcdc 70%, #999);
-            border: 1px solid #bbb;
-        }
-
-        .player-meta .name {
-            font-weight: 700;
-            font-size: 0.95rem;
-        }
-
-        .player-meta .captures {
-            font-size: 0.8rem;
-            color: var(--text-dim);
-            margin-top: 2px;
-        }
-
-        .game-status-center {
-            text-align: center;
-        }
-
-        .status-msg {
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: var(--accent-gold);
-            animation: pulse 1.8s infinite ease-in-out;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 0.85; }
-            50% { opacity: 1; transform: scale(1.02); }
-        }
-
-        /* Board Container */
-        .board-container {
-            position: relative;
-            background: #111;
-            padding: 12px;
-            border-radius: 16px;
-            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        canvas {
-            display: block;
-            border-radius: 8px;
-            cursor: pointer;
-            touch-action: none;
-        }
-
-        /* Control Action Buttons */
-        .controls {
-            width: 100%;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
+        .status-badge span {
+            color: var(--gold);
+            margin-left: 4px;
         }
 
         .btn-group {
@@ -200,251 +90,312 @@
         }
 
         button {
-            background: var(--panel-bg);
-            color: var(--text-light);
-            border: 1px solid rgba(255,255,255,0.12);
-            padding: 9px 16px;
-            font-size: 0.88rem;
-            font-weight: 600;
-            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            padding: 7px 14px;
+            font-size: 0.86rem;
+            font-weight: 700;
+            border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s ease;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
         }
 
-        button:hover {
-            background: #36332f;
-            border-color: var(--accent-gold);
-            color: var(--accent-gold);
+        button:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.28);
+            transform: translateY(-1px);
         }
 
-        button:active {
-            transform: scale(0.97);
+        button:active:not(:disabled) {
+            transform: translateY(1px);
         }
 
-        button.btn-primary {
-            background: #9d3a28;
-            border-color: #c74b35;
-            color: #fff;
-        }
-        button.btn-primary:hover {
-            background: #bd452f;
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
         }
 
-        select {
-            background: var(--panel-bg);
-            color: var(--text-light);
-            border: 1px solid rgba(255,255,255,0.12);
-            padding: 8px 12px;
-            font-size: 0.85rem;
-            border-radius: 8px;
+        button.btn-accent {
+            background: #d32f2f;
+            border-color: #ff5252;
+        }
+        button.btn-accent:hover:not(:disabled) {
+            background: #b71c1c;
+        }
+
+        button.btn-autocomplete {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border-color: #fbbf24;
+            color: #111;
+            box-shadow: 0 0 14px rgba(245, 158, 11, 0.6);
+            animation: pulse-gold 1.4s infinite alternate;
+        }
+
+        @keyframes pulse-gold {
+            0% { transform: scale(1); filter: brightness(1); }
+            100% { transform: scale(1.05); filter: brightness(1.2); }
+        }
+
+        /* 게임 보드 레이아웃 */
+        .game-board {
+            width: 100%;
+            max-width: 940px;
+            padding: 16px 8px 60px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .top-deck-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            width: 100%;
+        }
+
+        .stock-waste-group, .foundations-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .tableau-area {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
+            min-height: 480px;
+            width: 100%;
+        }
+
+        /* 카드 슬롯 기본 뼈대 */
+        .slot {
+            width: var(--card-width);
+            height: var(--card-height);
+            border-radius: var(--card-radius);
+            border: 2px dashed var(--slot-border);
+            position: relative;
+            background: rgba(0, 0, 0, 0.12);
+            flex-shrink: 0;
+        }
+
+        .slot::before {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.6rem;
+            color: rgba(255, 255, 255, 0.15);
+            font-weight: 800;
+        }
+
+        .slot.stock-slot::before { content: '↺'; font-size: 2rem; }
+        .slot.foundation-slot[data-suit="♠"]::before { content: '♠'; }
+        .slot.foundation-slot[data-suit="♥"]::before { content: '♥'; }
+        .slot.foundation-slot[data-suit="♦"]::before { content: '♦'; }
+        .slot.foundation-slot[data-suit="♣"]::before { content: '♣'; }
+        .slot.tableau-slot::before { content: 'K'; opacity: 0.1; }
+
+        .tableau-col {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            align-items: center;
+        }
+
+        /* 카드 스타일: 요청된 1/3 대형 폰트 및 문양 */
+        .card {
+            width: var(--card-width);
+            height: var(--card-height);
+            border-radius: var(--card-radius);
+            position: absolute;
+            background: var(--card-bg);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
             cursor: pointer;
-            outline: none;
+            transition: box-shadow 0.15s ease;
+            box-sizing: border-box;
+            overflow: hidden;
+            border: 1px solid rgba(0, 0, 0, 0.15);
         }
 
-        /* Modal Overlay */
+        .card:hover {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.55);
+        }
+
+        .card.dragging {
+            opacity: 0.85;
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.6);
+            z-index: 1000 !important;
+            pointer-events: none;
+        }
+
+        /* 앞면 카드 내부 레이아웃 (수직 2분할: 각 1/3 비율의 거대 숫자와 문양) */
+        .card-front {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-evenly;
+            padding: 4px 0;
+            line-height: 1;
+        }
+
+        .card-front.red {
+            color: var(--red-suit);
+        }
+
+        .card-front.black {
+            color: var(--black-suit);
+        }
+
+        /* 카드의 약 1/3을 차지하는 대형 숫자 */
+        .card-front .card-rank {
+            font-size: calc(var(--card-height) * 0.35);
+            font-weight: 900;
+            font-family: 'Arial Black', Impact, sans-serif;
+            letter-spacing: -1.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 45%;
+        }
+
+        /* 카드의 약 1/3을 차지하는 대형 문양 */
+        .card-front .card-suit {
+            font-size: calc(var(--card-height) * 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 45%;
+            filter: drop-shadow(0 1px 1px rgba(0,0,0,0.15));
+        }
+
+        /* 뒷면 카드 스타일 (고급 격자 패턴) */
+        .card.back {
+            background: repeating-linear-gradient(
+                45deg,
+                #1565c0,
+                #1565c0 8px,
+                #0d47a1 8px,
+                #0d47a1 16px
+            );
+            border: 3px solid #ffffff;
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.3);
+        }
+
+        /* 승리 축하 모달 */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
+            background: rgba(0, 0, 0, 0.75);
+            display: none;
             justify-content: center;
             align-items: center;
-            z-index: 999;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s;
-            backdrop-filter: blur(4px);
+            z-index: 2000;
+            backdrop-filter: blur(5px);
         }
 
         .modal-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
+            display: flex;
         }
 
-        .modal-card {
-            background: #2a2724;
-            border: 1px solid var(--accent-gold);
+        .modal-box {
+            background: #23211f;
+            border: 2px solid var(--gold);
+            padding: 30px 40px;
             border-radius: 16px;
-            padding: 28px;
-            width: 90%;
-            max-width: 420px;
             text-align: center;
-            box-shadow: 0 16px 40px rgba(0,0,0,0.6);
-            animation: slideUp 0.3s ease-out;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            animation: zoomIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        @keyframes slideUp {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        @keyframes zoomIn {
+            from { transform: scale(0.7); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
 
-        .modal-card h2 {
-            font-size: 1.5rem;
-            margin-bottom: 8px;
-            color: var(--accent-gold);
+        .modal-box h2 {
+            font-size: 2rem;
+            color: var(--gold);
+            margin-bottom: 12px;
         }
 
-        .score-table {
-            width: 100%;
-            margin: 18px 0;
-            border-collapse: collapse;
-            font-size: 0.92rem;
-        }
-
-        .score-table th, .score-table td {
-            padding: 8px 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-        }
-
-        .score-table th {
-            color: var(--text-dim);
-            font-weight: 500;
-        }
-
-        .score-table tr.total {
-            font-weight: 800;
+        .modal-box p {
+            color: #ddd;
             font-size: 1.05rem;
-            color: #fff;
-        }
-
-        @media (max-width: 600px) {
-            header {
-                flex-direction: column;
-                gap: 8px;
-                text-align: center;
-            }
-            .dashboard {
-                grid-template-columns: 1fr 1fr;
-                gap: 8px;
-            }
-            .game-status-center {
-                grid-column: span 2;
-                order: -1;
-            }
-            .controls {
-                justify-content: center;
-            }
+            margin-bottom: 24px;
         }
     </style>
 </head>
 <body>
 
-<div class="game-wrapper">
-    <!-- 헤더 -->
-    <header>
-        <div class="title-group">
-            <h1>AI 바둑 마스터 <span>碁 / Baduk</span></h1>
-        </div>
-        <div class="record-badge" id="recordDisplay">
-            전적: <b id="winCount">0</b>승 <b id="lossCount">0</b>패
-        </div>
-    </header>
+<header>
+    <div class="logo-group">
+        <h1>솔리테어</h1>
+    </div>
 
-    <!-- 대국 상황 패널 -->
-    <div class="dashboard">
-        <div class="player-card active" id="pCardBlack">
-            <div class="stone-icon stone-black-icon"></div>
-            <div class="player-meta">
-                <div class="name">흑번 (플레이어)</div>
-                <div class="captures">사석 따냄: <span id="blackCaptures">0</span>개</div>
-            </div>
+    <div class="status-bar">
+        <div class="status-badge">이동: <span id="lblMoves">0</span></div>
+        <div class="status-badge">점수: <span id="lblScore">0</span></div>
+    </div>
+
+    <div class="btn-group">
+        <button id="btnAutoComplete" class="btn-autocomplete" style="display: none;">⚡ 자동 완성</button>
+        <button id="btnUndo" title="한 수 되돌리기">↺ 되돌리기</button>
+        <button id="btnRestart" class="btn-accent">새 게임</button>
+    </div>
+</header>
+
+<main class="game-board">
+    <!-- 상단: 스톡/웨이스트 및 4개 완성 슬롯(Foundation) -->
+    <div class="top-deck-area">
+        <div class="stock-waste-group">
+            <div id="stockSlot" class="slot stock-slot" title="카드 덱 (클릭 시 뽑기)"></div>
+            <div id="wasteSlot" class="slot waste-slot"></div>
         </div>
 
-        <div class="game-status-center">
-            <div class="status-msg" id="gameStatus">흑의 차례 (착수하세요)</div>
-        </div>
-
-        <div class="player-card right" id="pCardWhite">
-            <div class="stone-icon stone-white-icon"></div>
-            <div class="player-meta">
-                <div class="name">백번 (인공지능)</div>
-                <div class="captures">덤: 6.5집 / 사석: <span id="whiteCaptures">0</span>개</div>
-            </div>
+        <div class="foundations-group">
+            <div class="slot foundation-slot" data-suit="♠" data-fidx="0"></div>
+            <div class="slot foundation-slot" data-suit="♥" data-fidx="1"></div>
+            <div class="slot foundation-slot" data-suit="♦" data-fidx="2"></div>
+            <div class="slot foundation-slot" data-suit="♣" data-fidx="3"></div>
         </div>
     </div>
 
-    <!-- 바둑판 캔버스 영역 -->
-    <div class="board-container">
-        <canvas id="badukCanvas" width="560" height="560"></canvas>
+    <!-- 하단: 7개의 작업열(Tableau) -->
+    <div class="tableau-area">
+        <div class="tableau-col"><div class="slot tableau-slot" data-tcol="0"></div></div>
+        <div class="tableau-col"><div class="slot tableau-slot" data-tcol="1"></div></div>
+        <div class="tableau-col"><div class="slot tableau-slot" data-tcol="2"></div></div>
+        <div class="tableau-col"><div class="slot tableau-slot" data-tcol="3"></div></div>
+        <div class="tableau-col"><div class="slot tableau-slot" data-tcol="4"></div></div>
+        <div class="tableau-col"><div class="slot tableau-slot" data-tcol="5"></div></div>
+        <div class="tableau-col"><div class="slot tableau-slot" data-tcol="6"></div></div>
     </div>
+</main>
 
-    <!-- 버튼 조작부 -->
-    <div class="controls">
-        <div class="btn-group">
-            <select id="boardSizeSelect">
-                <option value="9" selected>9 x 9 (빠른 바둑)</option>
-                <option value="13">13 x 13 (중급 대국)</option>
-                <option value="19">19 x 19 (정규 규격)</option>
-            </select>
-            <button id="btnNewGame">새 대국</button>
-        </div>
-
-        <div class="btn-group">
-            <button id="btnPass">착수 통과 (Pass)</button>
-            <button id="btnResign" class="btn-primary">기권 (Resign)</button>
-        </div>
-    </div>
-</div>
-
-<!-- 게임 결과 모달 -->
-<div class="modal-overlay" id="resultModal">
-    <div class="modal-card">
-        <h2 id="modalTitle">대국 종료</h2>
-        <p id="modalDesc" style="color: var(--text-dim); font-size: 0.9rem;">계가 결과</p>
-        
-        <table class="score-table">
-            <thead>
-                <tr>
-                    <th>항목</th>
-                    <th>흑(플레이어)</th>
-                    <th>백(컴퓨터)</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>확정 영역 (집)</td>
-                    <td id="bTerritory">0</td>
-                    <td id="wTerritory">0</td>
-                </tr>
-                <tr>
-                    <td>사석 (포획)</td>
-                    <td id="bStones">0</td>
-                    <td id="wStones">0</td>
-                </tr>
-                <tr>
-                    <td>덤 (Komi)</td>
-                    <td>0</td>
-                    <td>6.5</td>
-                </tr>
-                <tr class="total">
-                    <td>총점</td>
-                    <td id="bTotal">0</td>
-                    <td id="wTotal">6.5</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <div style="display:flex; justify-content:center; gap: 10px; margin-top: 16px;">
-            <button id="modalBtnRestart" class="btn-primary" style="padding: 10px 24px;">새 대국 시작</button>
-            <button id="modalBtnClose">기보 감상</button>
-        </div>
+<!-- 승리 축하 모달 -->
+<div class="modal-overlay" id="victoryModal">
+    <div class="modal-box">
+        <h2>🎉 축하합니다! 클리어! 🎉</h2>
+        <p id="victoryStats">총 0회 이동으로 퍼즐을 완성했습니다.</p>
+        <button id="modalBtnRestart" class="btn-accent" style="padding: 10px 24px; font-size: 1.05rem;">다시 한 판 하기</button>
     </div>
 </div>
 
 <script>
 /**
- * Zero-Dependency Baduk Game Engine with Procedural Graphics & Web Audio Synthesis
+ * Zero-Dependency Solitaire (Klondike) Engine
+ * With Realtime Web Audio & High Legibility Cards
  */
 
-// --- 1. Web Audio API 사운드 합성기 ---
+// --- 1. Web Audio API 실시간 음향 합성 ---
 class SoundFX {
     constructor() {
         this.ctx = null;
     }
-
     init() {
         if (!this.ctx) {
             const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -454,903 +405,635 @@ class SoundFX {
             this.ctx.resume();
         }
     }
-
-    // 바둑알 놓는 타격음 ("딱!")
-    playPlaceStone() {
-        this.init();
-        if (!this.ctx) return;
-        const now = this.ctx.currentTime;
-
-        // 원목 바둑판 울림 (저주파 Sine)
-        const osc = this.ctx.createOscillator();
-        const oscGain = this.ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(320, now);
-        osc.frequency.exponentialRampToValueAtTime(70, now + 0.08);
-
-        oscGain.gain.setValueAtTime(0.7, now);
-        oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
-
-        osc.connect(oscGain);
-        oscGain.connect(this.ctx.destination);
-
-        // 돌 마찰 순간 틱(High-pitch Click) 사운드
-        const snap = this.ctx.createOscillator();
-        const snapGain = this.ctx.createGain();
-        snap.type = 'sine';
-        snap.frequency.setValueAtTime(1600, now);
-        snap.frequency.exponentialRampToValueAtTime(400, now + 0.02);
-
-        snapGain.gain.setValueAtTime(0.4, now);
-        snapGain.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
-
-        snap.connect(snapGain);
-        snapGain.connect(this.ctx.destination);
-
-        osc.start(now);
-        snap.start(now);
-        osc.stop(now + 0.09);
-        snap.stop(now + 0.03);
-    }
-
-    // 사석 따낼 때 경쾌한 맑은 화음
-    playCapture() {
-        this.init();
-        if (!this.ctx) return;
-        const now = this.ctx.currentTime;
-        [523.25, 659.25, 783.99].forEach((freq, idx) => {
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(freq, now + idx * 0.04);
-            gain.gain.setValueAtTime(0.2, now + idx * 0.04);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.04 + 0.25);
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-            osc.start(now + idx * 0.04);
-            osc.stop(now + idx * 0.04 + 0.28);
-        });
-    }
-
-    // 패스 및 기권 알림음
-    playNotify() {
+    // 카드 슬라이드 & 착수음
+    playSnap() {
         this.init();
         if (!this.ctx) return;
         const now = this.ctx.currentTime;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(440, now);
-        osc.frequency.setValueAtTime(330, now + 0.1);
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(280, now);
+        osc.frequency.exponentialRampToValueAtTime(70, now + 0.06);
+
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+
         osc.connect(gain);
         gain.connect(this.ctx.destination);
         osc.start(now);
-        osc.stop(now + 0.26);
+        osc.stop(now + 0.07);
     }
-}
+    // 카드 뒤집기 사운드
+    playFlip() {
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
 
-// --- 2. 바둑 룰 및 상태 엔진 ---
-const EMPTY = 0;
-const BLACK = 1; // 플레이어
-const WHITE = 2; // 컴퓨터 AI
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(450, now);
+        osc.frequency.exponentialRampToValueAtTime(750, now + 0.07);
 
-class BadukGame {
-    constructor(size = 9) {
-        this.size = size;
-        this.reset();
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.08);
     }
-
-    reset(size = this.size) {
-        this.size = parseInt(size, 10);
-        this.board = Array(this.size * this.size).fill(EMPTY);
-        this.turn = BLACK; // 흑 선공
-        this.captures = { [BLACK]: 0, [WHITE]: 0 };
-        this.koCoord = -1; // 패(Ko) 금지 좌표
-        this.lastMove = -1;
-        this.passCount = 0;
-        this.isGameOver = false;
-        this.history = []; // 기보 기록
-    }
-
-    idx(r, c) {
-        return r * this.size + c;
-    }
-
-    rc(index) {
-        return { r: Math.floor(index / this.size), c: index % this.size };
-    }
-
-    isValidCoord(r, c) {
-        return r >= 0 && r < this.size && c >= 0 && c < this.size;
-    }
-
-    getAdjacent(index) {
-        const { r, c } = this.rc(index);
-        const neighbors = [];
-        const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-        for (const [dr, dc] of dirs) {
-            const nr = r + dr, nc = c + dc;
-            if (this.isValidCoord(nr, nc)) {
-                neighbors.push(this.idx(nr, nc));
-            }
-        }
-        return neighbors;
-    }
-
-    // 연결된 돌 덩어리(Group) 및 활로(Liberties) 계산 (BFS)
-    getGroupInfo(startIndex, board = this.board) {
-        const color = board[startIndex];
-        if (color === EMPTY) return { group: [], liberties: new Set() };
-
-        const visited = new Set([startIndex]);
-        const queue = [startIndex];
-        const group = [];
-        const liberties = new Set();
-
-        while (queue.length > 0) {
-            const curr = queue.shift();
-            group.push(curr);
-
-            for (const neighbor of this.getAdjacent(curr)) {
-                const nColor = board[neighbor];
-                if (nColor === EMPTY) {
-                    liberties.add(neighbor);
-                } else if (nColor === color && !visited.has(neighbor)) {
-                    visited.add(neighbor);
-                    queue.push(neighbor);
-                }
-            }
-        }
-        return { group, liberties };
-    }
-
-    // 착수 유효성 검증 및 가상 착수 결과 산출
-    evaluateMove(index, color, board = this.board, koCoord = this.koCoord) {
-        if (board[index] !== EMPTY) return { valid: false, reason: "이미 돌이 존재합니다." };
-        if (index === koCoord) return { valid: false, reason: "패(Ko) 규칙으로 즉시 다시 둘 수 없습니다." };
-
-        const opponent = color === BLACK ? WHITE : BLACK;
-        const testBoard = [...board];
-        testBoard[index] = color;
-
-        // 1. 인접한 상대 돌 중 활로가 0이 되어 잡히는 그룹 탐색
-        let capturedStones = [];
-        const neighbors = this.getAdjacent(index);
-        const visitedEnemyGroups = new Set();
-
-        for (const n of neighbors) {
-            if (testBoard[n] === opponent && !visitedEnemyGroups.has(n)) {
-                const enemyInfo = this.getGroupInfo(n, testBoard);
-                enemyInfo.group.forEach(gIdx => visitedEnemyGroups.add(gIdx));
-                if (enemyInfo.liberties.size === 0) {
-                    capturedStones.push(...enemyInfo.group);
-                }
-            }
-        }
-
-        // 상대 돌을 잡았을 때 해당 돌들을 임시 제거
-        for (const cap of capturedStones) {
-            testBoard[cap] = EMPTY;
-        }
-
-        // 2. 자신이 활로를 확보하고 있는지(자충수 여부 검사)
-        const myInfo = this.getGroupInfo(index, testBoard);
-        if (myInfo.liberties.size === 0) {
-            return { valid: false, reason: "자충수(활로가 없는 자리)는 착수할 수 없습니다." };
-        }
-
-        // 3. 패(Ko) 상태 판별: 한 개를 놓아 딱 상대 한 개를 잡았고, 내 돌도 활로가 1개인 경우
-        let newKoCoord = -1;
-        if (capturedStones.length === 1 && myInfo.group.length === 1 && myInfo.liberties.size === 1) {
-            newKoCoord = capturedStones[0];
-        }
-
-        return {
-            valid: true,
-            capturedStones,
-            newKoCoord,
-            resultingBoard: testBoard
-        };
-    }
-
-    // 실제 착수 수행
-    play(index) {
-        if (this.isGameOver) return { success: false, msg: "대국이 이미 종료되었습니다." };
-
-        const result = this.evaluateMove(index, this.turn);
-        if (!result.valid) {
-            return { success: false, msg: result.reason };
-        }
-
-        // 상태 적용
-        this.board = result.resultingBoard;
-        this.captures[this.turn] += result.capturedStones.length;
-        this.koCoord = result.newKoCoord;
-        this.lastMove = index;
-        this.passCount = 0;
-
-        this.history.push({
-            color: this.turn,
-            move: index,
-            captured: result.capturedStones
+    // 승리 팡파르
+    playVictory() {
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + i * 0.12);
+            gain.gain.setValueAtTime(0.3, now + i * 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.35);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now + i * 0.12);
+            osc.stop(now + i * 0.12 + 0.38);
         });
-
-        // 턴 전환
-        this.turn = (this.turn === BLACK) ? WHITE : BLACK;
-        return { success: true, captured: result.capturedStones };
-    }
-
-    pass() {
-        if (this.isGameOver) return false;
-        this.passCount++;
-        this.lastMove = -1;
-        this.koCoord = -1;
-        this.turn = (this.turn === BLACK) ? WHITE : BLACK;
-
-        if (this.passCount >= 2) {
-            this.isGameOver = true;
-            return true; // 게임 종료
-        }
-        return false;
-    }
-
-    // 간이 계가(집 계산) 엔진 (Flood Fill 영토 판정)
-    calculateTerritory() {
-        const visited = new Set();
-        let blackTerritory = 0;
-        let whiteTerritory = 0;
-
-        for (let i = 0; i < this.board.length; i++) {
-            if (this.board[i] === EMPTY && !visited.has(i)) {
-                const emptyGroup = [];
-                const adjacentColors = new Set();
-                const queue = [i];
-                visited.add(i);
-
-                while (queue.length > 0) {
-                    const curr = queue.shift();
-                    emptyGroup.push(curr);
-
-                    for (const n of this.getAdjacent(curr)) {
-                        const color = this.board[n];
-                        if (color === EMPTY) {
-                            if (!visited.has(n)) {
-                                visited.add(n);
-                                queue.push(n);
-                            }
-                        } else {
-                            adjacentColors.add(color);
-                        }
-                    }
-                }
-
-                // 공백 영역이 오직 한 색의 돌에만 둘러싸여 있을 때 해당 플레이어의 집으로 계산
-                if (adjacentColors.size === 1) {
-                    if (adjacentColors.has(BLACK)) {
-                        blackTerritory += emptyGroup.length;
-                    } else if (adjacentColors.has(WHITE)) {
-                        whiteTerritory += emptyGroup.length;
-                    }
-                }
-            }
-        }
-
-        return {
-            blackTerritory,
-            whiteTerritory,
-            blackCaptures: this.captures[BLACK],
-            whiteCaptures: this.captures[WHITE],
-            komi: 6.5,
-            blackTotal: blackTerritory + this.captures[BLACK],
-            whiteTotal: whiteTerritory + this.captures[WHITE] + 6.5
-        };
     }
 }
 
-// --- 3. 경량 휴리스틱 AI 대국 엔진 ---
-class BadukAI {
-    static getBestMove(game) {
-        const aiColor = WHITE;
-        const playerColor = BLACK;
-        const candidateMoves = [];
+// --- 2. 카드 정의 및 덱 상수 ---
+const SUITS = ['♠', '♥', '♦', '♣'];
+const SUIT_COLORS = { '♠': 'black', '♣': 'black', '♥': 'red', '♦': 'red' };
+const RANKS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+const RANK_LABELS = { 1: 'A', 11: 'J', 12: 'Q', 13: 'K' };
 
-        // 화점(Star points) 및 주요 거점 좌표 우선도 보정
-        const center = (game.size - 1) / 2;
-
-        for (let i = 0; i < game.board.length; i++) {
-            if (game.board[i] !== EMPTY) continue;
-
-            const sim = game.evaluateMove(i, aiColor);
-            if (!sim.valid) continue;
-
-            let score = 0;
-            const { r, c } = game.rc(i);
-
-            // 1. 단수 상태인 상대방 돌 잡기 (최우선 가치)
-            if (sim.capturedStones.length > 0) {
-                score += 120 + (sim.capturedStones.length * 35);
-            }
-
-            // 2. 내 돌이 단수(Liberties 1)가 되는 위험 회피
-            const myGroup = game.getGroupInfo(i, sim.resultingBoard);
-            if (myGroup.liberties.size === 1) {
-                // 자살골성 착수 방지 (극단적 감점)
-                score -= 90;
-            } else if (myGroup.liberties.size >= 3) {
-                score += 15;
-            }
-
-            // 3. 상대가 착수하면 큰 이득을 보는 자리(선수 차단) 탐색
-            const playerSim = game.evaluateMove(i, playerColor);
-            if (playerSim.valid && playerSim.capturedStones.length > 0) {
-                score += 85 + (playerSim.capturedStones.length * 25);
-            }
-
-            // 4. 기존 돌들과의 근접성 및 호응도 (고립된 허수 방지)
-            const neighbors = game.getAdjacent(i);
-            let friendNeighbors = 0;
-            let enemyNeighbors = 0;
-            for (const n of neighbors) {
-                if (game.board[n] === aiColor) friendNeighbors++;
-                if (game.board[n] === playerColor) enemyNeighbors++;
-            }
-            score += friendNeighbors * 6;
-            score += enemyNeighbors * 4;
-
-            // 5. 1선(바둑판 가장자리) 기권성 착수 감점 (초반 감점)
-            const isBorder = (r === 0 || r === game.size - 1 || c === 0 || c === game.size - 1);
-            if (isBorder && game.history.length < game.size * 2) {
-                score -= 18;
-            }
-
-            // 6. 중앙 및 3~4선 거점 선호
-            const distFromCenter = Math.abs(r - center) + Math.abs(c - center);
-            score -= distFromCenter * 1.5;
-
-            // 약간의 무작위성을 부여하여 매번 똑같은 패턴을 두지 않도록 유도
-            score += Math.random() * 4;
-
-            candidateMoves.push({ index: i, score });
-        }
-
-        if (candidateMoves.length === 0) return -1; // 둘 곳이 없으면 패스
-
-        // 점수 기준 내림차순 정렬
-        candidateMoves.sort((a, b) => b.score - a.score);
-        return candidateMoves[0].score < -30 ? -1 : candidateMoves[0].index;
-    }
+function getRankText(rank) {
+    return RANK_LABELS[rank] || rank.toString();
 }
 
-// --- 4. 그래픽 렌더러 및 UI 통합 컨트롤러 ---
-class BadukApp {
+// --- 3. 솔리테어 메인 게임 엔진 ---
+class SolitaireEngine {
     constructor() {
-        this.canvas = document.getElementById('badukCanvas');
-        this.ctx = this.canvas.getContext('2d');
         this.sound = new SoundFX();
-        this.game = new BadukGame(9);
+        this.stock = [];
+        this.waste = [];
+        this.foundations = [[], [], [], []];
+        this.tableaux = [[], [], [], [], [], [], []];
+        
+        this.history = []; // 되돌리기(Undo) 스택
+        this.moves = 0;
+        this.score = 0;
+        this.isAutoCompleting = false;
 
-        // 시각 효과용 파티클
-        this.particles = [];
-        this.hoverCoord = null;
+        // 더블 클릭 타이머
+        this.lastClickTime = 0;
+        this.lastClickedCard = null;
 
-        // UI 요소 캐싱
-        this.elGameStatus = document.getElementById('gameStatus');
-        this.elBlackCaptures = document.getElementById('blackCaptures');
-        this.elWhiteCaptures = document.getElementById('whiteCaptures');
-        this.elPCardBlack = document.getElementById('pCardBlack');
-        this.elPCardWhite = document.getElementById('pCardWhite');
-        this.elBoardSizeSelect = document.getElementById('boardSizeSelect');
-        this.elResultModal = document.getElementById('resultModal');
-        this.elWinCount = document.getElementById('winCount');
-        this.elLossCount = document.getElementById('lossCount');
+        // 드래그 상태 관리
+        this.draggedCards = null;
+        this.dragSource = null;
+        this.dragOffsets = [];
+        this.dragElements = [];
 
-        // 전적 로드
-        this.stats = JSON.parse(localStorage.getItem('baduk_master_stats') || '{"win": 0, "loss": 0}');
-        this.updateStatsUI();
-
-        // 캔버스 크기 맞춤 & 이벤트 바인딩
-        this.initCanvasSize();
-        this.bindEvents();
-
-        // 애니메이션 루프 시작
-        this.lastFrameTime = performance.now();
-        requestAnimationFrame((t) => this.renderLoop(t));
+        this.initDOM();
+        this.startNewGame();
     }
 
-    initCanvasSize() {
-        const dpr = window.devicePixelRatio || 1;
-        const containerWidth = Math.min(window.innerWidth - 40, 560);
-        this.displaySize = Math.max(300, containerWidth);
+    initDOM() {
+        this.stockSlot = document.getElementById('stockSlot');
+        this.wasteSlot = document.getElementById('wasteSlot');
+        this.foundationSlots = document.querySelectorAll('.foundation-slot');
+        this.tableauCols = document.querySelectorAll('.tableau-col');
+        
+        this.lblMoves = document.getElementById('lblMoves');
+        this.lblScore = document.getElementById('lblScore');
+        this.btnUndo = document.getElementById('btnUndo');
+        this.btnRestart = document.getElementById('btnRestart');
+        this.btnAutoComplete = document.getElementById('btnAutoComplete');
+        this.victoryModal = document.getElementById('victoryModal');
+        this.victoryStats = document.getElementById('victoryStats');
+        this.modalBtnRestart = document.getElementById('modalBtnRestart');
 
-        this.canvas.style.width = `${this.displaySize}px`;
-        this.canvas.style.height = `${this.displaySize}px`;
-        this.canvas.width = Math.floor(this.displaySize * dpr);
-        this.canvas.height = Math.floor(this.displaySize * dpr);
+        // 스톡 클릭 (카드 뽑기)
+        this.stockSlot.addEventListener('click', () => this.handleStockClick());
 
-        this.ctx.scale(dpr, dpr);
-    }
-
-    bindEvents() {
-        window.addEventListener('resize', () => this.initCanvasSize());
-
-        // 마우스 및 터치 착수
-        const handleInput = (clientX, clientY) => {
-            if (this.game.turn !== BLACK || this.game.isGameOver) return;
-            const rect = this.canvas.getBoundingClientRect();
-            const x = clientX - rect.left;
-            const y = clientY - rect.top;
-
-            const coord = this.getIntersectionFromCoord(x, y);
-            if (coord !== null) {
-                this.executePlayerMove(coord);
-            }
-        };
-
-        this.canvas.addEventListener('mousemove', (e) => {
-            const rect = this.canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            this.hoverCoord = this.getIntersectionFromCoord(x, y);
-        });
-
-        this.canvas.addEventListener('mouseleave', () => {
-            this.hoverCoord = null;
-        });
-
-        this.canvas.addEventListener('click', (e) => {
-            handleInput(e.clientX, e.clientY);
-        });
-
-        this.canvas.addEventListener('touchstart', (e) => {
-            const touch = e.touches[0];
-            handleInput(touch.clientX, touch.clientY);
-        }, { passive: true });
-
-        // 버튼 조작
-        document.getElementById('btnPass').addEventListener('click', () => {
-            if (this.game.isGameOver || this.game.turn !== BLACK) return;
-            this.sound.playNotify();
-            const ended = this.game.pass();
-            if (ended) {
-                this.endGameByPass();
-            } else {
-                this.updateUI();
-                this.triggerAiTurn();
-            }
-        });
-
-        document.getElementById('btnResign').addEventListener('click', () => {
-            if (this.game.isGameOver) return;
-            if (confirm("정말 기권하시겠습니까? (백의 불계승)")) {
-                this.finishGame(WHITE, true);
-            }
-        });
-
-        document.getElementById('btnNewGame').addEventListener('click', () => {
+        // 되돌리기 및 재시작
+        this.btnUndo.addEventListener('click', () => this.undo());
+        this.btnRestart.addEventListener('click', () => this.startNewGame());
+        this.modalBtnRestart.addEventListener('click', () => {
+            this.victoryModal.classList.remove('active');
             this.startNewGame();
         });
 
-        this.elBoardSizeSelect.addEventListener('change', (e) => {
-            this.game.reset(e.target.value);
-            this.updateUI();
-        });
+        // 자동 완성 버튼
+        this.btnAutoComplete.addEventListener('click', () => this.triggerAutoComplete());
 
-        document.getElementById('modalBtnRestart').addEventListener('click', () => {
-            this.elResultModal.classList.remove('active');
-            this.startNewGame();
-        });
-
-        document.getElementById('modalBtnClose').addEventListener('click', () => {
-            this.elResultModal.classList.remove('active');
+        // 전역 드래그 앤 드롭 마우스/터치 리스너
+        window.addEventListener('mousemove', (e) => this.onDragMove(e.clientX, e.clientY));
+        window.addEventListener('mouseup', (e) => this.onDragEnd(e.clientX, e.clientY));
+        window.addEventListener('touchmove', (e) => {
+            if (this.draggedCards) {
+                e.preventDefault();
+                this.onDragMove(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        }, { passive: false });
+        window.addEventListener('touchend', (e) => {
+            if (this.draggedCards && e.changedTouches.length > 0) {
+                this.onDragEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+            }
         });
     }
 
     startNewGame() {
-        const size = this.elBoardSizeSelect.value;
-        this.game.reset(size);
-        this.particles = [];
-        this.hoverCoord = null;
-        this.elResultModal.classList.remove('active');
-        this.updateUI();
-        this.elGameStatus.textContent = "흑의 차례 (착수하세요)";
-    }
+        this.saveStateToHistory(false); // 초기화 전 정리
+        this.history = [];
+        this.moves = 0;
+        this.score = 0;
+        this.isAutoCompleting = false;
+        this.btnAutoComplete.style.display = 'none';
 
-    getIntersectionFromCoord(x, y) {
-        const size = this.game.size;
-        const padding = this.displaySize * 0.08;
-        const gridStep = (this.displaySize - padding * 2) / (size - 1);
-
-        const col = Math.round((x - padding) / gridStep);
-        const row = Math.round((y - padding) / gridStep);
-
-        if (row >= 0 && row < size && col >= 0 && col < size) {
-            const centerX = padding + col * gridStep;
-            const centerY = padding + row * gridStep;
-            const dist = Math.hypot(x - centerX, y - centerY);
-            if (dist < gridStep * 0.45) {
-                return this.game.idx(row, col);
+        // 52장 덱 생성 및 셔플 (Fisher-Yates)
+        const deck = [];
+        let idCounter = 1;
+        for (const s of SUITS) {
+            for (const r of RANKS) {
+                deck.push({
+                    id: idCounter++,
+                    suit: s,
+                    rank: r,
+                    color: SUIT_COLORS[s],
+                    faceUp: false
+                });
             }
         }
-        return null;
-    }
-
-    executePlayerMove(coord) {
-        const result = this.game.play(coord);
-        if (!result.success) {
-            this.showToast(result.msg);
-            return;
+        for (let i = deck.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [deck[i], deck[j]] = [deck[j], deck[i]];
         }
 
-        this.sound.playPlaceStone();
-        this.spawnPlaceParticles(coord, BLACK);
-
-        if (result.captured.length > 0) {
-            this.sound.playCapture();
-            result.captured.forEach(c => this.spawnCaptureParticles(c));
+        // 작업열(Tableau 7열) 분배
+        this.tableaux = [[], [], [], [], [], [], []];
+        for (let col = 0; col < 7; col++) {
+            for (let row = 0; row <= col; row++) {
+                const card = deck.pop();
+                card.faceUp = (row === col); // 최상단 카드만 앞면
+                this.tableaux[col].push(card);
+            }
         }
 
-        this.updateUI();
+        this.stock = deck;
+        this.waste = [];
+        this.foundations = [[], [], [], []];
 
-        // 컴퓨터 AI 응수 호출
-        this.triggerAiTurn();
+        this.sound.playSnap();
+        this.render();
     }
 
-    triggerAiTurn() {
-        if (this.game.isGameOver) return;
+    // --- 4. 상태 저장 및 무제한 되돌리기 (Undo Engine) ---
+    saveStateToHistory(shouldRecord = true) {
+        if (!shouldRecord) return;
+        const snapshot = {
+            stock: JSON.parse(JSON.stringify(this.stock)),
+            waste: JSON.parse(JSON.stringify(this.waste)),
+            foundations: JSON.parse(JSON.stringify(this.foundations)),
+            tableaux: JSON.parse(JSON.stringify(this.tableaux)),
+            score: this.score,
+            moves: this.moves
+        };
+        this.history.push(snapshot);
+        if (this.history.length > 50) this.history.shift(); // 메모리 최적화
+        this.updateUndoButton();
+    }
 
-        this.elGameStatus.textContent = "인공지능 생각 중...";
-        this.elPCardBlack.classList.remove('active');
-        this.elPCardWhite.classList.add('active');
+    undo() {
+        if (this.history.length === 0 || this.isAutoCompleting) return;
+        const lastState = this.history.pop();
+        this.stock = lastState.stock;
+        this.waste = lastState.waste;
+        this.foundations = lastState.foundations;
+        this.tableaux = lastState.tableaux;
+        this.score = Math.max(0, lastState.score - 5);
+        this.moves = lastState.moves + 1;
 
-        setTimeout(() => {
-            if (this.game.isGameOver) return;
+        this.sound.playFlip();
+        this.render();
+    }
 
-            const aiMove = BadukAI.getBestMove(this.game);
-            if (aiMove === -1) {
-                // AI 패스 선언
-                this.sound.playNotify();
-                const ended = this.game.pass();
-                this.showToast("인공지능이 착수를 통과(Pass)했습니다.");
-                if (ended) {
-                    this.endGameByPass();
-                } else {
-                    this.updateUI();
+    updateUndoButton() {
+        this.btnUndo.disabled = (this.history.length === 0);
+    }
+
+    // --- 5. 규칙 검증 알고리즘 ---
+    canMoveToFoundation(card, fIndex) {
+        const foundation = this.foundations[fIndex];
+        const targetSuit = SUITS[fIndex];
+        if (card.suit !== targetSuit) return false;
+        if (foundation.length === 0) {
+            return card.rank === 1; // Ace부터 시작
+        }
+        const topCard = foundation[foundation.length - 1];
+        return card.rank === topCard.rank + 1;
+    }
+
+    canMoveToTableau(card, colIndex) {
+        const tableau = this.tableaux[colIndex];
+        if (tableau.length === 0) {
+            return card.rank === 13; // 빈 자리에는 오직 King(13)만 가능
+        }
+        const topCard = tableau[tableau.length - 1];
+        if (!topCard.faceUp) return false;
+        // 색상이 다르고(빨/검), 숫자가 1 작아야 함
+        return (card.color !== topCard.color) && (card.rank === topCard.rank - 1);
+    }
+
+    // --- 6. 스톡 카드 넘김 ---
+    handleStockClick() {
+        if (this.isAutoCompleting) return;
+        this.saveStateToHistory();
+        this.moves++;
+
+        if (this.stock.length > 0) {
+            const card = this.stock.pop();
+            card.faceUp = true;
+            this.waste.push(card);
+            this.sound.playFlip();
+        } else {
+            // 스톡 리셋 (Waste -> Stock)
+            if (this.waste.length === 0) return;
+            while (this.waste.length > 0) {
+                const c = this.waste.pop();
+                c.faceUp = false;
+                this.stock.push(c);
+            }
+            this.sound.playSnap();
+        }
+        this.render();
+    }
+
+    // --- 7. 스마트 더블클릭 (가장 알맞은 목적지로 즉시 직행) ---
+    handleCardDoubleClick(card, source) {
+        if (!card.faceUp || this.isAutoCompleting) return;
+
+        // 1순위: 완성 슬롯(Foundation)으로 이동 가능한가?
+        for (let f = 0; f < 4; f++) {
+            if (this.canMoveToFoundation(card, f)) {
+                this.executeAutoMove(card, source, { type: 'foundation', index: f });
+                return;
+            }
+        }
+
+        // 2순위: 작업열(Tableau)로 이동 가능한가?
+        for (let t = 0; t < 7; t++) {
+            if (source.type === 'tableau' && source.col === t) continue;
+            if (this.canMoveToTableau(card, t)) {
+                this.executeAutoMove(card, source, { type: 'tableau', col: t });
+                return;
+            }
+        }
+    }
+
+    executeAutoMove(card, source, target) {
+        this.saveStateToHistory();
+        this.moves++;
+
+        let movingCards = [];
+        if (source.type === 'waste') {
+            movingCards = [this.waste.pop()];
+        } else if (source.type === 'tableau') {
+            const col = this.tableaux[source.col];
+            const idx = col.indexOf(card);
+            movingCards = col.splice(idx);
+            // 원본 열의 새 최상단 카드가 닫혀있다면 자동 뒤집기
+            if (col.length > 0 && !col[col.length - 1].faceUp) {
+                col[col.length - 1].faceUp = true;
+                this.score += 5;
+            }
+        }
+
+        if (target.type === 'foundation') {
+            this.foundations[target.index].push(movingCards[0]);
+            this.score += 10;
+        } else if (target.type === 'tableau') {
+            this.tableaux[target.col].push(...movingCards);
+        }
+
+        this.sound.playSnap();
+        this.render();
+    }
+
+    // --- 8. 승리 가능 여부 체크 및 일괄 자동 완성 (Auto Complete) ---
+    checkAutoCompleteEligibility() {
+        if (this.isAutoCompleting) return;
+        // 조건: 스톡과 웨이스트가 비어있고, 모든 Tableau의 뒷면 카드가 열려있을 때 승리 확정!
+        if (this.stock.length > 0 || this.waste.length > 0) return;
+
+        let hasHidden = false;
+        for (const col of this.tableaux) {
+            for (const c of col) {
+                if (!c.faceUp) {
+                    hasHidden = true;
+                    break;
                 }
-            } else {
-                const aiResult = this.game.play(aiMove);
-                if (aiResult.success) {
-                    this.sound.playPlaceStone();
-                    this.spawnPlaceParticles(aiMove, WHITE);
-                    if (aiResult.captured.length > 0) {
-                        this.sound.playCapture();
-                        aiResult.captured.forEach(c => this.spawnCaptureParticles(c));
+            }
+            if (hasHidden) break;
+        }
+
+        if (!hasHidden && !this.isGameWon()) {
+            this.btnAutoComplete.style.display = 'inline-flex';
+        } else {
+            this.btnAutoComplete.style.display = 'none';
+        }
+    }
+
+    triggerAutoComplete() {
+        if (this.isAutoCompleting) return;
+        this.isAutoCompleting = true;
+        this.btnAutoComplete.style.display = 'none';
+
+        const step = () => {
+            let moved = false;
+            // 7개 작업열 중 Foundation으로 보낼 수 있는 카드 탐색
+            for (let t = 0; t < 7; t++) {
+                const col = this.tableaux[t];
+                if (col.length === 0) continue;
+                const card = col[col.length - 1];
+
+                for (let f = 0; f < 4; f++) {
+                    if (this.canMoveToFoundation(card, f)) {
+                        col.pop();
+                        this.foundations[f].push(card);
+                        this.score += 10;
+                        this.moves++;
+                        this.sound.playSnap();
+                        this.render();
+                        moved = true;
+                        break;
                     }
                 }
-                this.updateUI();
+                if (moved) break;
             }
-        }, 320);
-    }
 
-    endGameByPass() {
-        this.game.isGameOver = true;
-        const res = this.game.calculateTerritory();
-        const winner = res.blackTotal > res.whiteTotal ? BLACK : WHITE;
-        this.showResultModal(winner, res, false);
-    }
-
-    finishGame(winner, isResign = false) {
-        this.game.isGameOver = true;
-        const res = this.game.calculateTerritory();
-        this.showResultModal(winner, res, isResign);
-    }
-
-    showResultModal(winner, scoreData, isResign) {
-        const isWin = winner === BLACK;
-        if (isWin) {
-            this.stats.win++;
-        } else {
-            this.stats.loss++;
-        }
-        localStorage.setItem('baduk_master_stats', JSON.stringify(this.stats));
-        this.updateStatsUI();
-
-        const modalTitle = document.getElementById('modalTitle');
-        const modalDesc = document.getElementById('modalDesc');
-
-        if (isResign) {
-            modalTitle.textContent = winner === BLACK ? "흑 불계승! (승리)" : "백 불계승! (패배)";
-            modalTitle.style.color = winner === BLACK ? "#4ade80" : "#ef4444";
-            modalDesc.textContent = "기권으로 대국이 종료되었습니다.";
-        } else {
-            const diff = Math.abs(scoreData.blackTotal - scoreData.whiteTotal).toFixed(1);
-            modalTitle.textContent = winner === BLACK ? `흑 ${diff}집반 승! (승리)` : `백 ${diff}집반 승! (패배)`;
-            modalTitle.style.color = winner === BLACK ? "#4ade80" : "#ef4444";
-            modalDesc.textContent = "양 대국자 연속 패스로 계가가 완료되었습니다.";
-        }
-
-        document.getElementById('bTerritory').textContent = scoreData.blackTerritory;
-        document.getElementById('wTerritory').textContent = scoreData.whiteTerritory;
-        document.getElementById('bStones').textContent = scoreData.blackCaptures;
-        document.getElementById('wStones').textContent = scoreData.whiteCaptures;
-        document.getElementById('bTotal').textContent = scoreData.blackTotal.toFixed(1);
-        document.getElementById('wTotal').textContent = scoreData.whiteTotal.toFixed(1);
-
-        this.elResultModal.classList.add('active');
-        this.updateUI();
-    }
-
-    updateUI() {
-        this.elBlackCaptures.textContent = this.game.captures[BLACK];
-        this.elWhiteCaptures.textContent = this.game.captures[WHITE];
-
-        if (!this.game.isGameOver) {
-            if (this.game.turn === BLACK) {
-                this.elPCardBlack.classList.add('active');
-                this.elPCardWhite.classList.remove('active');
-                this.elGameStatus.textContent = "흑의 차례 (착수하세요)";
+            if (moved && !this.isGameWon()) {
+                setTimeout(step, 90);
             } else {
-                this.elPCardBlack.classList.remove('active');
-                this.elPCardWhite.classList.add('active');
-                this.elGameStatus.textContent = "인공지능 계산 중...";
+                this.isAutoCompleting = false;
+                this.checkWinCondition();
             }
-        } else {
-            this.elPCardBlack.classList.remove('active');
-            this.elPCardWhite.classList.remove('active');
-            this.elGameStatus.textContent = "대국 종료";
-        }
-    }
-
-    updateStatsUI() {
-        this.elWinCount.textContent = this.stats.win;
-        this.elLossCount.textContent = this.stats.loss;
-    }
-
-    showToast(msg) {
-        this.elGameStatus.textContent = msg;
-        setTimeout(() => {
-            if (!this.game.isGameOver) {
-                this.elGameStatus.textContent = this.game.turn === BLACK ? "흑의 차례 (착수하세요)" : "인공지능 계산 중...";
-            }
-        }, 1600);
-    }
-
-    spawnPlaceParticles(coord, color) {
-        const { x, y } = this.getXYFromIndex(coord);
-        for (let i = 0; i < 14; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const speed = 1.2 + Math.random() * 2.5;
-            this.particles.push({
-                x, y,
-                vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed,
-                alpha: 1,
-                decay: 0.04 + Math.random() * 0.03,
-                size: 2.5 + Math.random() * 2.5,
-                color: color === BLACK ? 'rgba(230, 200, 140,' : 'rgba(255, 255, 255,'
-            });
-        }
-    }
-
-    spawnCaptureParticles(coord) {
-        const { x, y } = this.getXYFromIndex(coord);
-        for (let i = 0; i < 20; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const speed = 2 + Math.random() * 3.5;
-            this.particles.push({
-                x, y,
-                vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed,
-                alpha: 1,
-                decay: 0.025 + Math.random() * 0.03,
-                size: 3 + Math.random() * 3,
-                color: 'rgba(240, 90, 70,'
-            });
-        }
-    }
-
-    getXYFromIndex(index) {
-        const size = this.game.size;
-        const padding = this.displaySize * 0.08;
-        const gridStep = (this.displaySize - padding * 2) / (size - 1);
-        const { r, c } = this.game.rc(index);
-        return {
-            x: padding + c * gridStep,
-            y: padding + r * gridStep
         };
+        step();
     }
 
-    // --- 5. 실시간 렌더링 파이프라인 ---
-    renderLoop(currentTime) {
-        const dt = (currentTime - this.lastFrameTime) / 1000;
-        this.lastFrameTime = currentTime;
-
-        this.renderBoard();
-        this.renderParticles(dt);
-
-        requestAnimationFrame((t) => this.renderLoop(t));
+    isGameWon() {
+        return this.foundations.every(f => f.length === 13);
     }
 
-    renderBoard() {
-        const ctx = this.ctx;
-        const size = this.game.size;
-        const w = this.displaySize;
-        const padding = w * 0.08;
-        const gridStep = (w - padding * 2) / (size - 1);
-        const stoneRadius = gridStep * 0.46;
-
-        ctx.clearRect(0, 0, w, w);
-
-        // 1. 최고급 원목 바둑판 (Kaya wood grain 질감 절차적 드로잉)
-        const woodGrad = ctx.createLinearGradient(0, 0, w, w);
-        woodGrad.addColorStop(0, '#e8b877');
-        woodGrad.addColorStop(0.5, '#dcab68');
-        woodGrad.addColorStop(1, '#cb9956');
-        ctx.fillStyle = woodGrad;
-        ctx.fillRect(0, 0, w, w);
-
-        // 미세 원목 나뭇결 효과
-        ctx.save();
-        ctx.globalAlpha = 0.05;
-        ctx.strokeStyle = '#4a2500';
-        ctx.lineWidth = 1;
-        for (let y = 0; y < w; y += 4) {
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.bezierCurveTo(w * 0.3, y + Math.sin(y * 0.05) * 6, w * 0.7, y - Math.cos(y * 0.05) * 6, w, y);
-            ctx.stroke();
-        }
-        ctx.restore();
-
-        // 2. 바둑판 외곽 테두리 및 격자선 그리기
-        ctx.strokeStyle = '#3e2612';
-        ctx.lineWidth = 1.2;
-
-        for (let i = 0; i < size; i++) {
-            const pos = padding + i * gridStep;
-
-            // 가로줄
-            ctx.beginPath();
-            ctx.moveTo(padding, pos);
-            ctx.lineTo(w - padding, pos);
-            ctx.stroke();
-
-            // 세로줄
-            ctx.beginPath();
-            ctx.moveTo(pos, padding);
-            ctx.lineTo(pos, w - padding);
-            ctx.stroke();
-        }
-
-        // 3. 화점(Hoshi) 렌더링
-        const starPoints = this.getStarPoints(size);
-        ctx.fillStyle = '#3e2612';
-        for (const [sr, sc] of starPoints) {
-            const px = padding + sc * gridStep;
-            const py = padding + sr * gridStep;
-            ctx.beginPath();
-            ctx.arc(px, py, Math.max(2.5, gridStep * 0.075), 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        // 4. 착수 가이드(마우스 호버 미리보기)
-        if (this.hoverCoord !== null && this.game.turn === BLACK && !this.game.isGameOver) {
-            if (this.game.board[this.hoverCoord] === EMPTY) {
-                const { x, y } = this.getXYFromIndex(this.hoverCoord);
-                ctx.save();
-                ctx.globalAlpha = 0.45;
-                ctx.beginPath();
-                ctx.arc(x, y, stoneRadius, 0, Math.PI * 2);
-                ctx.fillStyle = '#222';
-                ctx.fill();
-                ctx.restore();
-            }
-        }
-
-        // 5. 바둑돌 입체 렌더링 (자연광 입체감)
-        for (let idx = 0; idx < this.game.board.length; idx++) {
-            const stone = this.game.board[idx];
-            if (stone === EMPTY) continue;
-
-            const { x, y } = this.getXYFromIndex(idx);
-
-            // 돌 그림자 (Drop Shadow)
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(x + 2, y + 3, stoneRadius, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-            ctx.filter = 'blur(2px)';
-            ctx.fill();
-            ctx.restore();
-
-            // 바둑돌 몸체 (흑돌: 먹빛 입체 구형 / 백돌: 무결 조개껍질 광택)
-            ctx.beginPath();
-            ctx.arc(x, y, stoneRadius, 0, Math.PI * 2);
-
-            if (stone === BLACK) {
-                const grad = ctx.createRadialGradient(
-                    x - stoneRadius * 0.35, y - stoneRadius * 0.35, stoneRadius * 0.1,
-                    x, y, stoneRadius
-                );
-                grad.addColorStop(0, '#555555');
-                grad.addColorStop(0.6, '#181818');
-                grad.addColorStop(1, '#050505');
-                ctx.fillStyle = grad;
-                ctx.fill();
-
-                // 미세 테두리 윤곽
-                ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-                ctx.lineWidth = 1;
-                ctx.stroke();
-            } else {
-                const grad = ctx.createRadialGradient(
-                    x - stoneRadius * 0.35, y - stoneRadius * 0.35, stoneRadius * 0.1,
-                    x, y, stoneRadius
-                );
-                grad.addColorStop(0, '#ffffff');
-                grad.addColorStop(0.75, '#e4e4e4');
-                grad.addColorStop(1, '#b0b0b0');
-                ctx.fillStyle = grad;
-                ctx.fill();
-
-                ctx.strokeStyle = 'rgba(0,0,0,0.15)';
-                ctx.lineWidth = 1;
-                ctx.stroke();
-            }
-
-            // 마지막 착수 표시 (적갈색/금색 포인트 링)
-            if (idx === this.game.lastMove) {
-                ctx.beginPath();
-                ctx.arc(x, y, stoneRadius * 0.35, 0, Math.PI * 2);
-                ctx.strokeStyle = stone === BLACK ? '#f59e0b' : '#dc2626';
-                ctx.lineWidth = 2.4;
-                ctx.stroke();
-            }
+    checkWinCondition() {
+        if (this.isGameWon()) {
+            this.sound.playVictory();
+            this.victoryStats.textContent = `총 ${this.moves}회 이동 / 점수: ${this.score}점으로 승리하셨습니다!`;
+            this.victoryModal.classList.add('active');
         }
     }
 
-    renderParticles(dt) {
-        const ctx = this.ctx;
-        for (let i = this.particles.length - 1; i >= 0; i--) {
-            const p = this.particles[i];
-            p.x += p.vx;
-            p.y += p.vy;
-            p.alpha -= p.decay;
+    // --- 9. 드래그 앤 드롭 상호작용 ---
+    onDragStart(e, card, source, element) {
+        if (!card.faceUp || this.isAutoCompleting) return;
 
-            if (p.alpha <= 0) {
-                this.particles.splice(i, 1);
-                continue;
-            }
-
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fillStyle = `${p.color}${p.alpha})`;
-            ctx.fill();
-            ctx.restore();
+        // 더블 클릭(더블 탭) 감지 (320ms 이내 재클릭)
+        const now = performance.now();
+        if (this.lastClickedCard === card && (now - this.lastClickTime) < 320) {
+            this.handleCardDoubleClick(card, source);
+            this.lastClickTime = 0;
+            this.lastClickedCard = null;
+            return;
         }
+        this.lastClickTime = now;
+        this.lastClickedCard = card;
+
+        // 드래그 대상 수집 (작업열의 경우 하위 묶음 카드 동시 이동)
+        let cards = [];
+        if (source.type === 'waste') {
+            cards = [card];
+        } else if (source.type === 'foundation') {
+            cards = [card];
+        } else if (source.type === 'tableau') {
+            const col = this.tableaux[source.col];
+            const idx = col.indexOf(card);
+            cards = col.slice(idx);
+        }
+
+        this.draggedCards = cards;
+        this.dragSource = source;
+
+        // 터치/마우스 좌표 보정
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        this.dragElements = [];
+        this.dragOffsets = [];
+
+        cards.forEach((c) => {
+            const el = document.getElementById(`card-${c.id}`);
+            const rect = el.getBoundingClientRect();
+            this.dragOffsets.push({
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            });
+            el.classList.add('dragging');
+            this.dragElements.push(el);
+        });
+
+        this.onDragMove(clientX, clientY);
     }
 
-    getStarPoints(size) {
-        if (size === 9) {
-            return [[2, 2], [2, 6], [6, 2], [6, 6], [4, 4]];
-        } else if (size === 13) {
-            return [[3, 3], [3, 9], [9, 3], [9, 9], [6, 6]];
-        } else if (size === 19) {
-            return [
-                [3, 3], [3, 9], [3, 15],
-                [9, 3], [9, 9], [9, 15],
-                [15, 3], [15, 9], [15, 15]
-            ];
+    onDragMove(clientX, clientY) {
+        if (!this.draggedCards || this.dragElements.length === 0) return;
+        const baseOffset = this.dragOffsets[0];
+        const cardH = this.dragElements[0].offsetHeight;
+        const cascadeOffset = Math.min(cardH * 0.28, 30);
+
+        this.dragElements.forEach((el, i) => {
+            const posX = clientX - baseOffset.x;
+            const posY = clientY - baseOffset.y + (i * cascadeOffset);
+            el.style.left = `${posX}px`;
+            el.style.top = `${posY}px`;
+            el.style.position = 'fixed';
+            el.style.zIndex = 1000 + i;
+        });
+    }
+
+    onDragEnd(clientX, clientY) {
+        if (!this.draggedCards) return;
+
+        const primaryCard = this.draggedCards[0];
+        let dropTarget = null;
+
+        // 1. Foundation 드롭 감지 (단일 카드만 가능)
+        if (this.draggedCards.length === 1) {
+            this.foundationSlots.forEach((slot) => {
+                const rect = slot.getBoundingClientRect();
+                if (clientX >= rect.left && clientX <= rect.right &&
+                    clientY >= rect.top && clientY <= rect.bottom) {
+                    const fIdx = parseInt(slot.dataset.fidx, 10);
+                    if (this.canMoveToFoundation(primaryCard, fIdx)) {
+                        dropTarget = { type: 'foundation', index: fIdx };
+                    }
+                }
+            });
         }
-        return [];
+
+        // 2. Tableau 드롭 감지
+        if (!dropTarget) {
+            this.tableauCols.forEach((colEl, tIdx) => {
+                const rect = colEl.getBoundingClientRect();
+                if (clientX >= rect.left - 15 && clientX <= rect.right + 15 &&
+                    clientY >= rect.top && clientY <= rect.bottom + 120) {
+                    if (this.canMoveToTableau(primaryCard, tIdx)) {
+                        dropTarget = { type: 'tableau', col: tIdx };
+                    }
+                }
+            });
+        }
+
+        // 드롭 성공 시 이동 적용
+        if (dropTarget) {
+            this.saveStateToHistory();
+            this.moves++;
+
+            // 출처에서 카드 제거
+            if (this.dragSource.type === 'waste') {
+                this.waste.pop();
+            } else if (this.dragSource.type === 'foundation') {
+                this.foundations[this.dragSource.index].pop();
+            } else if (this.dragSource.type === 'tableau') {
+                const srcCol = this.tableaux[this.dragSource.col];
+                srcCol.splice(srcCol.indexOf(primaryCard));
+                // 남은 카드 뒤집기
+                if (srcCol.length > 0 && !srcCol[srcCol.length - 1].faceUp) {
+                    srcCol[srcCol.length - 1].faceUp = true;
+                    this.score += 5;
+                }
+            }
+
+            // 목적지에 카드 추가
+            if (dropTarget.type === 'foundation') {
+                this.foundations[dropTarget.index].push(primaryCard);
+                this.score += 10;
+            } else if (dropTarget.type === 'tableau') {
+                this.tableaux[dropTarget.col].push(...this.draggedCards);
+            }
+
+            this.sound.playSnap();
+        }
+
+        // 드래그 상태 해제 및 재렌더링
+        this.draggedCards = null;
+        this.dragSource = null;
+        this.dragElements = [];
+        this.dragOffsets = [];
+        this.render();
+    }
+
+    // --- 10. 반응형 DOM 렌더러 (초대형 숫자 및 문양 카드 생성) ---
+    render() {
+        this.lblMoves.textContent = this.moves;
+        this.lblScore.textContent = this.score;
+        this.updateUndoButton();
+
+        // 1. Stock 렌더
+        this.stockSlot.innerHTML = '';
+        if (this.stock.length > 0) {
+            const backCard = this.createCardElement(this.stock[this.stock.length - 1]);
+            this.stockSlot.appendChild(backCard);
+        }
+
+        // 2. Waste 렌더
+        this.wasteSlot.innerHTML = '';
+        if (this.waste.length > 0) {
+            const topWaste = this.waste[this.waste.length - 1];
+            const wasteEl = this.createCardElement(topWaste);
+            this.bindCardDrag(wasteEl, topWaste, { type: 'waste' });
+            this.wasteSlot.appendChild(wasteEl);
+        }
+
+        // 3. Foundation 렌더
+        this.foundationSlots.forEach((slot, fIdx) => {
+            slot.innerHTML = '';
+            const pile = this.foundations[fIdx];
+            if (pile.length > 0) {
+                const topCard = pile[pile.length - 1];
+                const cardEl = this.createCardElement(topCard);
+                this.bindCardDrag(cardEl, topCard, { type: 'foundation', index: fIdx });
+                slot.appendChild(cardEl);
+            }
+        });
+
+        // 4. Tableau 렌더 (수직 캐스케이드 배치)
+        this.tableauCols.forEach((colEl, colIdx) => {
+            const slot = colEl.querySelector('.tableau-slot');
+            colEl.innerHTML = '';
+            colEl.appendChild(slot); // 기본 슬롯 복원
+
+            const pile = this.tableaux[colIdx];
+            const cardH = slot.offsetHeight || 130;
+            const downOffset = Math.min(cardH * 0.16, 20);
+            const upOffset = Math.min(cardH * 0.28, 36);
+
+            let currentTop = 0;
+            pile.forEach((card, idx) => {
+                const cardEl = this.createCardElement(card);
+                cardEl.style.top = `${currentTop}px`;
+                cardEl.style.zIndex = idx + 1;
+
+                if (card.faceUp) {
+                    this.bindCardDrag(cardEl, card, { type: 'tableau', col: colIdx });
+                    currentTop += upOffset;
+                } else {
+                    currentTop += downOffset;
+                }
+                colEl.appendChild(cardEl);
+            });
+        });
+
+        this.checkAutoCompleteEligibility();
+        this.checkWinCondition();
+    }
+
+    // 초대형 1/3 카드 생성 (UI 요청 완벽 준수)
+    createCardElement(card) {
+        const el = document.createElement('div');
+        el.className = `card ${card.faceUp ? 'front' : 'back'}`;
+        el.id = `card-${card.id}`;
+
+        if (card.faceUp) {
+            const rankLabel = getRankText(card.rank);
+            el.innerHTML = `
+                <div class="card-front ${card.color}">
+                    <div class="card-rank">${rankLabel}</div>
+                    <div class="card-suit">${card.suit}</div>
+                </div>
+            `;
+        }
+        return el;
+    }
+
+    bindCardDrag(element, card, source) {
+        element.addEventListener('mousedown', (e) => {
+            if (e.button === 0) this.onDragStart(e, card, source, element);
+        });
+        element.addEventListener('touchstart', (e) => {
+            this.onDragStart(e, card, source, element);
+        }, { passive: false });
     }
 }
 
 // 애플리케이션 진입점
 window.addEventListener('DOMContentLoaded', () => {
-    new BadukApp();
+    new SolitaireEngine();
 });
 </script>
 </body>
